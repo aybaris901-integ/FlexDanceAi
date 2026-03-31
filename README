@@ -1,0 +1,21 @@
+FlexIn Dance AI
+Project Description
+
+FlexIn Dance AI is a computer vision-based platform designed for automated dance training and choreography generation. The system utilizes pose estimation to provide real-time feedback, allowing users to learn professional routines by synchronizing their movements with a digital reference.
+Key Features
+
+    Pose Correction System: Real-time analysis of skeletal data using MediaPipe. The system visualizes the user's skeleton and highlights deviations in posture or limb position (Red/Green indicators).
+
+    Split-Screen Interaction: Simultaneous display of a professional reference and the user's camera feed for intuitive "karaoke-style" learning.
+
+    AI Choreography Generation: Processing music tracks and user prompts to generate suggested dance sequences.
+
+    Beat Synchronization: Latency-aware tracking to ensure the user stays in rhythm with the musical composition.
+
+Technical Specifications
+
+    Language: Python 3.12
+
+    Frameworks: OpenCV, MediaPipe (Skeletal Tracking), FastAPI
+
+    Environment: Developed on Ubuntu Linux
