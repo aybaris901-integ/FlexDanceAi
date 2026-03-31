@@ -1,0 +1,9 @@
+Installation and Usage
+
+git clone https://github.com/aybaris901-integ/FlexInDanceAI.git
+
+pip install -r requirements.txt
+
+python main.py
+or
+python web_stream.py
