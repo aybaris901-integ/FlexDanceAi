@@ -1,11 +1,19 @@
+"""
+Vision Engine v1.0
+Core module for skeletal tracking and movement analysis using MediaPipe & OpenCV.
+Developed for FlexIn / Dance AI.
+"""
+
 from renderer import GhostRenderer
 import json
 import numpy as np
 import cv2
 import mediapipe as mp
+import cv2
+import mediapipe as mp
 import time
 
-# Инициализация рендерера и загрузка данных
+# load ghost first level
 ghost_ui = GhostRenderer()
 
 try:
@@ -41,12 +49,12 @@ class DanceVision:
         angle = np.degrees(np.arccos(np.clip(cosine_angle, -1.0, 1.0)))
         return int(angle)
 
-# Создаем один глобальный объект для работы
+#
 vision = DanceVision()
-# ИСКУССТВЕННЫЙ ТЕСТ: Создаем призрака вручную, если JSON пустой
+#  Manually create a ghost if the JSON is empty
 if not ghost_data:
     print("ВНИМАНИЕ: Создаю тестового призрака (две точки), чтобы проверить рендерер!")
-    # Создаем одну позу (индекс 0), где рука просто висит
+    # We create one pose (index 0) where the arm just hangs
     test_pose = []
     for i in range(33): # MediaPipe нужно ровно 33 точки
         test_pose.append({'x': 0.5, 'y': 0.5 + (i * 0.01), 'z': 0})
@@ -57,19 +65,19 @@ def run_game_logic(frame):
     h, w, _ = frame.shape
     frame = cv2.flip(frame, 1) # Отзеркаливаем видео
 
-    # 1. ОТРИСОВКА ПРИЗРАКА (Золотой силуэт)
-    # Ищем позу в JSON по индексу текущего шага
+    # 1. DRAWING A GHOST (Golden Silhouette)
+    # Search for a pose in JSON by the current step index
     current_step_name = str(vision.track_index)
     if current_step_name in ghost_data:
-        # Рисуем призрака ПЕРВЫМ, чтобы он был как подложка
+        # drawing ghost first
         frame = ghost_ui.draw_ghost(frame, ghost_data[current_step_name])
 
-    # 2. ОБРАБОТКА ТВОЕЙ ПОЗЫ
+    #Drawing your skeleton
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     results = vision.pose.process(rgb_frame)
     elapsed_time = time.time() - vision.start_time
 
-    # Таймер смены поз
+    # Position change timer
     if elapsed_time > vision.HOLD_TIME:
         vision.track_index = (vision.track_index + 1) % len(vision.dance_track)
         vision.start_time = time.time()
@@ -81,7 +89,7 @@ def run_game_logic(frame):
 
     if results.pose_landmarks:
         lm = results.pose_landmarks.landmark
-        # Проверка правого локтя
+        # Checking the right elbow
         if lm[14].visibility > 0.5:
             shoulder = [lm[12].x, lm[12].y]
             elbow = [lm[14].x, lm[14].y]
@@ -90,7 +98,7 @@ def run_game_logic(frame):
             current_angle = vision.calculate_angle(shoulder, elbow, wrist)
             error = abs(current_angle - target_angle)
 
-            # Логика HIT / MISS
+            # Logic HIT / MISS
             if 2.2 < elapsed_time < 2.8 and not vision.scored_this_round:
                 if error < 25:
                     vision.total_score += 100 + (vision.streak * 10)
@@ -107,16 +115,16 @@ def run_game_logic(frame):
                 status = "WAIT FOR NEXT..."
                 msg_color = (0, 255, 255)
 
-        # Рисуем твой текущий скелет поверх призрака
+        # Draw your current skeleton over the ghost
         vision.mp_drawing.draw_landmarks(frame, results.pose_landmarks, vision.mp_pose.POSE_CONNECTIONS)
 
-    # 3. ИНТЕРФЕЙС (Верхняя панель)
+    # 3. interface
     cv2.rectangle(frame, (0, 0), (w, 100), (20, 20, 20), -1)
     cv2.putText(frame, status, (20, 45), cv2.FONT_HERSHEY_SIMPLEX, 1.2, msg_color, 3)
     cv2.putText(frame, f"SCORE: {vision.total_score} | STREAK: {vision.streak}", (20, 85),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (200, 200, 200), 2)
 
-    # Прогресс-бар
+    # progress bar
     bar_color = (0, 255, 255) if elapsed_time < 2.2 else (0, 255, 0)
     progress_w = int((elapsed_time / vision.HOLD_TIME) * w)
     cv2.line(frame, (0, 95), (progress_w, 95), bar_color, 10)
@@ -125,7 +133,7 @@ def run_game_logic(frame):
 
 if __name__ == "__main__":
     cap = cv2.VideoCapture(0)
-    print("Запуск игры... Нажми 'q' для выхода.")
+    print("Load the game, press 'q' to exit..")
 
     while cap.isOpened():
         ret, frame = cap.read()

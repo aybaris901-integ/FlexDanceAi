@@ -1,5 +1,6 @@
 import cv2
 import mediapipe as mp
+import numpy as np
 
 # Start mediapipe self = new function
 class DanceVision():
@@ -18,9 +19,12 @@ class DanceVision():
         results = self.pose.process(img_rgb)
 
         if results.pose_landmarks:
-            # Если нажали 'S', сохраняем текущие точки как эталон
-            if save_now:
-                self.perfect_pose = results.pose_landmarks
+
+            s = [results.pose_landmarks.landmark[11].x,results.pose_landmarks.landmark[11].y]
+            e = [results.pose_landmarks.landmark[13].x,results.pose_landmarks.landmark[13].y]
+            w = [results.pose_landmarks.landmark[15].x,results.pose_landmarks.landmark[15].y]
+
+            current_angle = self.calculate_angle(s, e, w)
 
             # Отрисовка стандартного скелета
             self.mp_drawing.draw_landmarks(frame, results.pose_landmarks, self.mp_pose.POSE_CONNECTIONS)
@@ -30,14 +34,20 @@ class DanceVision():
                 h, w, _ = frame.shape
                 for i, landmark in enumerate(results.pose_landmarks.landmark):
                     perf = self.perfect_pose.landmark[i]
+                    return frame
 
-                    # Считаем расстояние (правильно x-x, y-y)
-                    dist = ((landmark.x - perf.x) ** 2 + (landmark.y - perf.y) ** 2) ** 0.5
+            
+    def calculate_angle(self, a, b, c):
+        a, b, c = np.array(a), np.array(b), np.array(c)
+        ba, bc = a - b, c - b
+        cosine_angle = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc))
+        angle = np.degrees(np.arccos(np.clip(cosine_angle, -1.0, 1.0)))
+        return int(angle)
 
-                    color = (0, 255, 0) if dist < 0.05 else (0, 0, 255)
-                    cx, cy = int(landmark.x * w), int(landmark.y * h)
-                    cv2.circle(frame, (cx, cy), 5, color, -1)
-        return frame
+
+
+
+
 
 
 # --- ЗАПУСК ---
@@ -48,11 +58,14 @@ while cap.isOpened():
     ret, frame = cap.read()
     if not ret: break
 
+
+    mirrored_frame = cv2.flip(frame, 1)
+
     key = cv2.waitKey(1) & 0xFF
     # Передаем кадр в обработку. Если нажата 's', метод обновит эталон.
     frame = dv.process(frame, save_now=(key == ord('s')))
 
-    cv2.imshow("WELCOME", frame)
+    cv2.imshow("WELCOME", mirrored_frame)
     if key == ord('q'): break
 
 cap.release()
