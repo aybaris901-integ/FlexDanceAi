@@ -2,6 +2,7 @@ import cv2
 import mediapipe as mp
 import numpy as np
 
+
 # Start mediapipe self = new function
 class DanceVision():
     def __init__(self):
@@ -9,20 +10,20 @@ class DanceVision():
         self.mp_pose = mp.solutions.pose
         # very easy mode (0)
         self.pose = self.mp_pose.Pose(model_complexity=0)
-        #skeleton vektors and landmarks
+        # skeleton vektors and landmarks
         self.mp_drawing = mp.solutions.drawing_utils
 
     def process(self, frame, save_now=False):
-    #opencv color bgr mediapipe color rgb and this block they are s connect
+        # opencv color bgr mediapipe color rgb and this block they are s connect
         img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    #save results
+        # save results
         results = self.pose.process(img_rgb)
 
         if results.pose_landmarks:
 
-            s = [results.pose_landmarks.landmark[11].x,results.pose_landmarks.landmark[11].y]
-            e = [results.pose_landmarks.landmark[13].x,results.pose_landmarks.landmark[13].y]
-            w = [results.pose_landmarks.landmark[15].x,results.pose_landmarks.landmark[15].y]
+            s = [results.pose_landmarks.landmark[11].x, results.pose_landmarks.landmark[11].y]
+            e = [results.pose_landmarks.landmark[13].x, results.pose_landmarks.landmark[13].y]
+            w = [results.pose_landmarks.landmark[15].x, results.pose_landmarks.landmark[15].y]
 
             current_angle = self.calculate_angle(s, e, w)
 
@@ -36,18 +37,12 @@ class DanceVision():
                     perf = self.perfect_pose.landmark[i]
                     return frame
 
-            
     def calculate_angle(self, a, b, c):
         a, b, c = np.array(a), np.array(b), np.array(c)
         ba, bc = a - b, c - b
         cosine_angle = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc))
         angle = np.degrees(np.arccos(np.clip(cosine_angle, -1.0, 1.0)))
         return int(angle)
-
-
-
-
-
 
 
 # --- ЗАПУСК ---
@@ -57,7 +52,6 @@ cap = cv2.VideoCapture(0)
 while cap.isOpened():
     ret, frame = cap.read()
     if not ret: break
-
 
     mirrored_frame = cv2.flip(frame, 1)
 
@@ -70,3 +64,5 @@ while cap.isOpened():
 
 cap.release()
 cv2.destroyAllWindows()
+
+# tomorrow To complete the calculation on cosine and scalar, it is advisable to add 3 d
