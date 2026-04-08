@@ -9,8 +9,6 @@ import json
 import numpy as np
 import cv2
 import mediapipe as mp
-import cv2
-import mediapipe as mp
 import time
 
 # load ghost first level
